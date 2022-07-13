@@ -2,7 +2,7 @@ from collections import UserDict
 from enum import Enum
 from weakref import WeakMethod
 
-class EthereumAdresses(Enum):
+class EthereumAddresses(Enum):
     USDC   = "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
     USDT   = "0xdAC17F958D2ee523a2206206994597C13D831ec7"
     WBTC   = "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599"
@@ -15,7 +15,7 @@ class EthereumAdresses(Enum):
     # BNB    = "0xB8c77482e45F1F44dE1745F52C74426C631bDD52"
 
 
-class ArbitrumAdresses(Enum): 
+class ArbitrumAddresses(Enum): 
     USDT = "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"
     USDC = "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"
     WBTC = "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f"
@@ -23,7 +23,7 @@ class ArbitrumAdresses(Enum):
     WETH = "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1"
 
 
-class OptimismAdresses(Enum):
+class OptimismAddresses(Enum):
     USDT = "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58"
     USDC = "0x7F5c764cBc14f9669B88837ca1490cCa17c31607"
     WBTC = "0x68f180fcCe6836688e9084f035309E29Bf0A2095"
@@ -31,7 +31,7 @@ class OptimismAdresses(Enum):
     WETH = "0x4200000000000000000000000000000000000006"
     
 
-class UniswapV3RouterAdresses(Enum):
+class UniswapV3RouterAddresses(Enum):
     MAIN = "0xE592427A0AEce92De3Edee1F18E0157C05861564"
     ARBI = "0xE592427A0AEce92De3Edee1F18E0157C05861564"
     OPTI = "0xE592427A0AEce92De3Edee1F18E0157C05861564"
