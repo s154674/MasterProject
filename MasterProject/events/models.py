@@ -21,6 +21,7 @@ class ERC20Addresses(models.Model):
 
 class PoolAddresses(models.Model):
     network = models.ForeignKey(Networks, on_delete=models.PROTECT)
-    token0 = models.ForeignKey(ERC20, on_delete=models.PROTECT)
-    token1 = models.ForeignKey(ERC20, on_delete=models.PROTECT)
+    token0 = models.ForeignKey(ERC20, on_delete=models.PROTECT, related_name="token0")
+    token1 = models.ForeignKey(ERC20, on_delete=models.PROTECT, related_name="token1")
+    fee_tier = models.PositiveBigIntegerField()
     address = models.CharField(max_length=256)
