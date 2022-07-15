@@ -1,3 +1,4 @@
+from argparse import RawDescriptionHelpFormatter
 from statistics import mode
 from unicodedata import name
 from django.db import models
@@ -6,6 +7,7 @@ from django.db import models
 class ERC20(models.Model):
     name = models.CharField(max_length=30, null=True)
     symbol = models.CharField(max_length=10, unique=True)
+    decimals = models.PositiveSmallIntegerField(default=18)
 
 
 class Networks(models.Model):
@@ -31,3 +33,12 @@ class PoolAddresses(models.Model):
 
     class Meta:
         unique_together = ["token0", "token1", "fee_tier", "network"]
+class SwapEvent(models.Model):
+    event_hash = models.CharField(max_length=256)
+    sender = models.CharField(max_length=256)
+    recipient = models.CharField(max_length=256)
+    amount0 = models.CharField(max_length=256)
+    amount1 = models.CharField(max_length=256)
+    sqrtPriceX96 = models.CharField(max_length=256)
+    liquidity = models.CharField(max_length=256)
+    tick = models.CharField(max_length=256)
