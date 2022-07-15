@@ -74,7 +74,7 @@ class UniConnector:
             # For each fee tier
             for fee in self.fees:
                 # print(pair[0].value, pair[1].value, fee.value)
-                print(self.factory.functions.getPool(pair[0].value, pair[1].value, fee.value).call())
+                yield pair[0].name, pair[1].name, fee, self.factory.functions.getPool(pair[0].value, pair[1].value, fee.value).call()
                 
         # For all unique pairs in enumerator
 
