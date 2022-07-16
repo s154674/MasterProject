@@ -1,4 +1,5 @@
 from json import load
+from events.models import SwapEvent
 from modules.addresses import UniswapV3Addresses, PolygonAddresses, EthereumAddresses, ArbitrumAddresses, OptimismAddresses
 import sys, os
 from web3 import Web3
@@ -138,7 +139,8 @@ class UniConnector:
             # params = [{'address': pool.address , 'fromBlock': hex(current_range[0]), 'toBlock': hex(current_range[1]) , 'topics': [swap_topic]}]
             
             # params = [{'address': pool.address , 'fromBlock': f'{current_range[0]:x}', 'toBlock': f'{current_range[1]:x}', 'topics': [swap_topic]}]
-            data = {"jsonrpc":"2.0","method":"eth_getLogs","params":[{'address': pool.address , 'fromBlock': hex(current_range[0]), 'toBlock': hex(current_range[1]) , 'topics': [swap_topic]}],"id":1}
+            # print(pool.address, hex(int(current_range[0])), hex(int(current_range[1])), swap_topic)
+            data = {"jsonrpc":"2.0","method":"eth_getLogs","params":[{'address': pool.address , 'fromBlock': hex(int(current_range[0])), 'toBlock': hex(int(current_range[1])) , 'topics': [swap_topic]}],"id":1}
     
             r = requests.post(url=secrets[f'{self.network}_URL'], headers={"Content-Type": "application/json"}, data=dumps(data))
             
@@ -147,21 +149,21 @@ class UniConnector:
                 
 
                 for event in swap_events:
-                    yield self.event_parser(event)
+                    yield SwapEvent(pool_address=pool, **self.event_parser(event).args)
             
             except KeyError:
-                if loads(r.text)['error']['code'] == -32005:
+                if loads(r.text)['error']['code'] in [-32005, -32605]:
                     #split blockrange
                     span = current_range[1] - current_range[0]
                     if span == 1:
                         raise Exception("Span is 1")
                     half = span/2
                     if half.is_integer():
-                        block_ranges.append[(current_range[0],current_range[0]+half)]
-                        block_ranges.append[(current_range[1]-(half-1),current_range[1])]
+                        block_ranges.append((current_range[0],current_range[0]+half))
+                        block_ranges.append((current_range[1]-(half-1),current_range[1]))
                     else:
-                        block_ranges.append[(current_range[0],current_range[0]+math.floor(half))]
-                        block_ranges.append[(current_range[1]-math.floor(half),current_range[1])]
+                        block_ranges.append((current_range[0],current_range[0]+math.floor(half)))
+                        block_ranges.append((current_range[1]-math.floor(half),current_range[1]))
                     pass
                 else:
                     raise Exception(f"Unkown infura respons for params:\n{data}\n Response was \n{r.status_code, r.text}\n")
