@@ -1,10 +1,11 @@
 from django.core.management.base import BaseCommand, CommandError
 import sys, os
-from MasterProject.events.models import SwapEvent
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from events.models import PoolAddresses, ERC20, ERC20Addresses, Networks
+from events.models import PoolAddresses, ERC20, ERC20Addresses, Networks, SwapEvent
 from modules.connector import UniConnector
 from modules.addresses import EthereumAddresses, ArbitrumAddresses, OptimismAddresses, PolygonAddresses
+from attributedict.collections import AttributeDict
+import time
 
 
 class Command(BaseCommand):
@@ -45,9 +46,31 @@ class Command(BaseCommand):
 
 
         # Fetch swap events
+        
+
+        # event = AttributeDict({'sender': '0xB23DC3F00856288Cd7B6Bde5D06159f01b75aA4C', 'recipient': '0xB23DC3F00856288Cd7B6Bde5D06159f01b75aA4C', 'amount0': -328965041083921299668992, 'amount1': 329005257730, 'sqrtPriceX96': 79229047158522641211193, 'liquidity': 3580576773542804936844240, 'tick': -276324})
+        # SwapEvent.objects.create(**event)
+        # if not SwapEvent.objects.all().exists():
+        #     for network in networks:
+        #         for pool in PoolAddresses.objects.filter(network=network):
+        #             con = UniConnector(network.short)
+        #             for event in con.get_swap_events(pool):
+        #                 print(event.args)
+        #                 SwapEvent.objects.create(**event.args)
+
+        # else: 
+        #     print(f'SwapEvents count: {len(SwapEvent.objects.all())}')
+
+        # SwapEvent.objects.all().delete()
         if not SwapEvent.objects.all().exists():
-            for network in networks:
-                for pool in PoolAddresses.objects.filter(network=network):
-                    con = UniConnector(network)
-                    for event in con.get_swap_events(pool):
-                        SwapEvent.objects.create(**event)
+            for i, network in enumerate(networks):
+                print(f"Parsing swap events for network {network.short} - {i+1} of {len(networks)}")
+                pool_addresses = PoolAddresses.objects.filter(network=network)
+                for i, pool in enumerate(pool_addresses):
+                    print(f"Parsing swap events for pool address id {pool.pk} - {i+1} of {len(pool_addresses)}")
+                    start = time.time()
+                    con = UniConnector(network.short)
+                    SwapEvent.objects.bulk_create(con.get_swap_events(pool))
+                    print(f'Took {time.time()-start}')
+
+        # print(SwapEvent.objects.all().count())
