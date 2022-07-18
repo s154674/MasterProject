@@ -133,6 +133,23 @@ class UniConnector:
 
         block_ranges.append(self.get_block_range())
         
+        def split_ranges(lst, n):
+            "Splits range into n smaller chunks to get less API timeouts/too big response erros"
+            item = lst.pop()
+            if (item[1] - item[0]) > n:
+                amount = int(math.floor((item[1]-item[0])/n))
+                temp = item[0]
+                for i in range(n):
+                    if i != (n-1):
+                        temp = temp + amount
+                        lst.append(((temp-amount),temp))
+                    else:
+                        lst.append((temp, item[1]))
+            else:
+                lst.append((item[0],item[1]))
+
+        split_ranges(block_ranges, 6)
+        
         while block_ranges:
             current_range = block_ranges.pop()
             
@@ -147,11 +164,27 @@ class UniConnector:
             try:
                 swap_events = loads(r.text)["result"]
                 
+                swaps_list = []
+                transaction_list = []
 
                 for event in swap_events:
                     transaction_meta, parsed_event = self.event_parser(event)
-                    yield  SwapEvent(transacton_meta=TransactionMeta(**transaction_meta), pool_address=pool, **parsed_event.args)
-            
+                    obj = TransactionMeta(**transaction_meta)
+                    transaction_list.append(obj)
+                    swaps_list.append(SwapEvent(transaction_meta=obj, pool_address=pool, **parsed_event.args))
+                    # Bulk insert every 1000 objects
+                    if len(swaps_list) > 1000:
+                        TransactionMeta.objects.bulk_create(transaction_list)
+                        transaction_list = []
+                        SwapEvent.objects.bulk_create(swaps_list)
+                        swaps_list = []
+
+                # insert tail if present
+                if transaction_list:
+                    TransactionMeta.objects.bulk_create(transaction_list)
+                if swaps_list:
+                    SwapEvent.objects.bulk_create(swaps_list)
+
             except KeyError:
                 if loads(r.text)['error']['code'] in [-32005, -32605]:
                     #split blockrange
