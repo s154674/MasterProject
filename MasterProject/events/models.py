@@ -1,4 +1,5 @@
 from argparse import RawDescriptionHelpFormatter
+from dataclasses import dataclass
 from statistics import mode
 from unicodedata import name
 from django.db import models
@@ -46,8 +47,24 @@ class PoolAddresses(models.Model):
 
     class Meta:
         unique_together = ["token0", "token1", "fee_tier", "network"]
+
+        
+class TransactionMeta(models.Model):
+    address = models.CharField(max_length=256)
+    blockHash = models.CharField(max_length=256)
+    blockNumber = models.BigIntegerField()
+    data = models.TextField()
+    logIndex = models.BigIntegerField()
+    removed = models.CharField(max_length=256)
+    topics = models.CharField(max_length=256)
+    transactionHash = models.CharField(max_length=256)
+    transactionIndex = models.CharField(max_length=256)
+
+
+
 class SwapEvent(models.Model):
     pool_address = models.ForeignKey(PoolAddresses, on_delete=models.PROTECT)
+    transaction_meta = models.ForeignKey(TransactionMeta, on_delete=models.PROTECT, null=True, default=None)
     event_hash = models.CharField(max_length=256)
     sender = models.CharField(max_length=256)
     recipient = models.CharField(max_length=256)
@@ -56,3 +73,6 @@ class SwapEvent(models.Model):
     sqrtPriceX96 = models.CharField(max_length=100)
     liquidity = models.DecimalField(max_digits=77, decimal_places=0)
     tick = models.DecimalField(max_digits=77, decimal_places=0)
+
+    class Meta:
+        pass
