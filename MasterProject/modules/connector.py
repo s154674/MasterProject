@@ -1,5 +1,5 @@
 from json import load
-from events.models import SwapEvent
+from events.models import SwapEvent, TransactionMeta
 from modules.addresses import UniswapV3Addresses, PolygonAddresses, EthereumAddresses, ArbitrumAddresses, OptimismAddresses
 import sys, os
 from web3 import Web3
@@ -108,18 +108,18 @@ class UniConnector:
         'transactionHash': HexBytes(event['transactionHash']), 
         'transactionIndex': int(event['transactionIndex'],16)})
 
-        return self.pool_event_parser_contract.events.Swap().processLog(temp)
+        return temp, self.pool_event_parser_contract.events.Swap().processLog(temp)
 
 
     def get_block_range(self):
         if self.network == "MAIN":
-            return MainBlocks.FRIST_WEEK_JULY.value
+            return MainBlocks.JUNE.value
         elif self.network == "ARBI":
-            return ArbiBlocks.FRIST_WEEK_JULY.value
+            return ArbiBlocks.JUNE.value
         elif self.network == "OPTI":
-            return OptiBlocks.FRIST_WEEK_JULY.value
+            return OptiBlocks.JUNE.value
         elif self.network == "POLY":
-            return PolyBlocks.FRIST_WEEK_JULY.value
+            return PolyBlocks.JUNE.value
         else:
             return None
 
@@ -149,7 +149,8 @@ class UniConnector:
                 
 
                 for event in swap_events:
-                    yield SwapEvent(pool_address=pool, **self.event_parser(event).args)
+                    transaction_meta, parsed_event = self.event_parser(event)
+                    yield  SwapEvent(transacton_meta=TransactionMeta(**transaction_meta), pool_address=pool, **parsed_event.args)
             
             except KeyError:
                 if loads(r.text)['error']['code'] in [-32005, -32605]:
