@@ -113,13 +113,13 @@ class UniConnector:
 
     def get_block_range(self):
         if self.network == "MAIN":
-            return MainBlocks.JUNE.value
+            return MainBlocks.ALL.value
         elif self.network == "ARBI":
-            return ArbiBlocks.JUNE.value
+            return ArbiBlocks.ALL.value
         elif self.network == "OPTI":
-            return OptiBlocks.JUNE.value
+            return OptiBlocks.ALL.value
         elif self.network == "POLY":
-            return PolyBlocks.JUNE.value
+            return PolyBlocks.ALL.value
         else:
             return None
 
@@ -169,7 +169,10 @@ class UniConnector:
 
                 for event in swap_events:
                     transaction_meta, parsed_event = self.event_parser(event)
-                    obj = TransactionMeta(**transaction_meta)
+                    event["blockNumber"] = int(event['blockNumber'], 16)
+                    event["logIndex"] = int(event['logIndex'], 16)
+                    obj = TransactionMeta(**event)
+
                     transaction_list.append(obj)
                     swaps_list.append(SwapEvent(transaction_meta=obj, pool_address=pool, **parsed_event.args))
                     # Bulk insert every 1000 objects
