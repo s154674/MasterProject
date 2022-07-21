@@ -1,8 +1,9 @@
 from argparse import RawDescriptionHelpFormatter
 from dataclasses import dataclass
 from statistics import mode
-from unicodedata import name
+from unicodedata import decimal, name
 from django.db import models
+from eth_typing import BlockNumber
 
 class BigIntegerField(models.IntegerField):
     empty_strings_allowed=False
@@ -76,3 +77,10 @@ class SwapEvent(models.Model):
 
     class Meta:
         pass
+
+class BlockTimes(models.Model):
+    network = models.ForeignKey(Networks, on_delete=models.PROTECT)
+    blockNumber = models.BigIntegerField()
+    blockHash = models.CharField(max_length=256)
+    timestamp = models.DecimalField(max_digits=77, decimal_places=0)
+    datetime = models.DateTimeField()
