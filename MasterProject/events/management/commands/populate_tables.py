@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from events.models import PoolAddresses, ERC20, ERC20Addresses, Networks, SwapEvent
+from events.models import PoolAddresses, ERC20, ERC20Addresses, Networks, SwapEvent, TransactionMeta
 from modules.connector import UniConnector
 from modules.addresses import EthereumAddresses, ArbitrumAddresses, OptimismAddresses, PolygonAddresses
 from attributedict.collections import AttributeDict
@@ -62,15 +62,27 @@ class Command(BaseCommand):
         #     print(f'SwapEvents count: {len(SwapEvent.objects.all())}')
 
         # SwapEvent.objects.all().delete()
-        if not SwapEvent.objects.all().exists():
-            for i, network in enumerate(networks):
+        # if not SwapEvent.objects.all().exists():
+        for i, network in enumerate(networks):
+            if i == 3:
                 print(f"Parsing swap events for network {network.short} - {i+1} of {len(networks)}")
                 pool_addresses = PoolAddresses.objects.filter(network=network)
                 for i, pool in enumerate(pool_addresses):
-                    print(f"Parsing swap events for pool address id {pool.pk} - {i+1} of {len(pool_addresses)}")
-                    start = time.time()
-                    con = UniConnector(network.short)
-                    SwapEvent.objects.bulk_create(con.get_swap_events(pool))
-                    print(f'Took {time.time()-start}')
+                    # if i == 17:
+                    #     print(SwapEvent.objects.filter(pool_address= pool).count())
+                    #     transactions = SwapEvent.objects.filter(pool_address= pool).values('transaction_meta')
+                    #     SwapEvent.objects.filter(pool_address= pool).delete()
+                    #     for transaction in transactions:
+                    #         TransactionMeta.objects.get(pk=transaction['transaction_meta']).delete()
+                    #     print(SwapEvent.objects.filter(pool_address= pool).count())    
+                    #     break
+                    if i >= 17:
+                        # print(SwapEvent.objects.filter(pool_address= pool).count())
+                        # break
+                        print(f"Parsing swap events for pool address id {pool.pk} - {i+1} of {len(pool_addresses)}")
+                        start = time.time()
+                        con = UniConnector(network.short)
+                        con.get_swap_events(pool)
+                        print(f'Took {time.time()-start}')
 
         # print(SwapEvent.objects.all().count())
