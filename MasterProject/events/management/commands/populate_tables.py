@@ -19,10 +19,10 @@ class Command(BaseCommand):
         
         # Get or create ERC20's
         WETH = ERC20.objects.get_or_create(name="Wrapped Ether", symbol="WETH")[0]
-        WBTC = ERC20.objects.get_or_create(name="Wrapped Bitcoin", symbol="WBTC")[0]
+        WBTC = ERC20.objects.get_or_create(name="Wrapped Bitcoin", symbol="WBTC", decimals=8)[0]
         DAI  = ERC20.objects.get_or_create(name="DAI stablecoin", symbol="DAI")[0]
-        USDC = ERC20.objects.get_or_create(name="USDC stablecoin", symbol="USDC")[0]
-        USDT = ERC20.objects.get_or_create(name="USDT stablecoin", symbol="USDT")[0]
+        USDC = ERC20.objects.get_or_create(name="USDC stablecoin", symbol="USDC", decimals=6)[0]
+        USDT = ERC20.objects.get_or_create(name="USDT stablecoin", symbol="USDT", decimals=6)[0]
 
         # Get or create networks
         MAIN = Networks.objects.get_or_create(name="Mainnet Ethereum", chain_id=1, short="MAIN")[0]
@@ -64,21 +64,24 @@ class Command(BaseCommand):
         # SwapEvent.objects.all().delete()
         # if not SwapEvent.objects.all().exists():
         for i, network in enumerate(networks):
-            if i == 3:
-                print(f"Parsing swap events for network {network.short} - {i+1} of {len(networks)}")
-                pool_addresses = PoolAddresses.objects.filter(network=network)
-                for i, pool in enumerate(pool_addresses):
-                    # if i == 17:
-                    #     print(SwapEvent.objects.filter(pool_address= pool).count())
-                    #     transactions = SwapEvent.objects.filter(pool_address= pool).values('transaction_meta')
-                    #     SwapEvent.objects.filter(pool_address= pool).delete()
-                    #     for transaction in transactions:
-                    #         TransactionMeta.objects.get(pk=transaction['transaction_meta']).delete()
-                    #     print(SwapEvent.objects.filter(pool_address= pool).count())    
-                    #     break
-                    if i >= 17:
-                        # print(SwapEvent.objects.filter(pool_address= pool).count())
-                        # break
+            if i == 2:
+                if network.short == 'OPTI':
+                    
+                    print(f"Parsing swap events for network {network.short} - {i+1} of {len(networks)}")
+                    pool_addresses = PoolAddresses.objects.filter(network=network)
+                    for i, pool in enumerate(pool_addresses):
+                    #     # if i == 17:
+                    #     #     print(SwapEvent.objects.filter(pool_address= pool).count())
+                    #     #     transactions = SwapEvent.objects.filter(pool_address= pool).values('transaction_meta')
+                    #     #     SwapEvent.objects.filter(pool_address= pool).delete()
+                    #     #     for transaction in transactions:
+                    #     #         TransactionMeta.objects.get(pk=transaction['transaction_meta']).delete()
+                    #     #     print(SwapEvent.objects.filter(pool_address= pool).count())    
+                    #     #     break
+                    #     # if i >= 17:
+                    #         # print(SwapEvent.objects.filter(pool_address= pool).count())
+                    #         # break
+
                         print(f"Parsing swap events for pool address id {pool.pk} - {i+1} of {len(pool_addresses)}")
                         start = time.time()
                         con = UniConnector(network.short)
