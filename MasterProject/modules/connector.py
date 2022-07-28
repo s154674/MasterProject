@@ -1,4 +1,6 @@
 from json import load
+
+from urllib3 import Retry
 from events.models import SwapEvent, TransactionMeta
 from modules.addresses import UniswapV3Addresses, PolygonAddresses, EthereumAddresses, ArbitrumAddresses, OptimismAddresses
 import sys, os
@@ -12,6 +14,8 @@ import math
 from attributedict.collections import AttributeDict
 from hexbytes import HexBytes
 from collections.abc import Sequence
+from time import sleep
+from requests import ConnectionError
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from modules.secrets import secrets
@@ -46,7 +50,6 @@ class UniConnector:
         else:
             raise Exception(f"Not valid network name: {network}")
         
-        
         # Set fee tiers (only main and poly has 0.01 % tier)
         if self.network in ["MAIN", "POLY"]:
             self.fees = MainPolyFees
@@ -65,19 +68,7 @@ class UniConnector:
         self.pool_event_parser_contract = self.w3.eth.contract(abi=self.pool_abi)
 
 
-    def get_pair(self, token0, token1, fee):
-        """ Given a token pair and a fee, returns the pool
-        """
-        pass
-
-
-    def __get_pairs(self):
-        """ Return all token pairs at all fee levels as 
-        """
-        pass
-
-
-    def get_pool_addresses(self) -> dict:
+    def get_pool_addresses(self):
         """ Return the pool addresses. 
         """
         # For all unique ERC20 pairs
@@ -158,17 +149,22 @@ class UniConnector:
             # params = [{'address': pool.address , 'fromBlock': f'{current_range[0]:x}', 'toBlock': f'{current_range[1]:x}', 'topics': [swap_topic]}]
             # print(pool.address, hex(int(current_range[0])), hex(int(current_range[1])), swap_topic)
             data = {"jsonrpc":"2.0","method":"eth_getLogs","params":[{'address': pool.address , 'fromBlock': hex(int(current_range[0])), 'toBlock': hex(int(current_range[1])) , 'topics': [swap_topic]}],"id":1}
-    
-            r = requests.post(url=secrets[f'{self.network}_URL'], headers={"Content-Type": "application/json"}, data=dumps(data))
             
+           
             try:
+                r = requests.post(url=secrets[f'{self.network}_URL'], headers={"Content-Type": "application/json"}, data=dumps(data))
                 swap_events = loads(r.text)["result"]
-                
+
+
+                if type(swap_events) != list:
+                    raise Exception(f'Swap_events type: {type(swap_events)}')
+
                 swaps_list = []
                 transaction_list = []
 
+                # print(len(swap_events))
                 for event in swap_events:
-                    transaction_meta, parsed_event = self.event_parser(event)
+                    parsed_event = self.event_parser(event)
                     event["blockNumber"] = int(event['blockNumber'], 16)
                     event["logIndex"] = int(event['logIndex'], 16)
                     obj = TransactionMeta(**event)
@@ -177,7 +173,9 @@ class UniConnector:
                     swaps_list.append(SwapEvent(transaction_meta=obj, pool_address=pool, **parsed_event.args))
                     # Bulk insert every 1000 objects
                     if len(swaps_list) > 1000:
-                        TransactionMeta.objects.bulk_create(transaction_list)
+                        # print('Hi')
+                        idk = TransactionMeta.objects.bulk_create(transaction_list)
+                        # print(idk)
                         transaction_list = []
                         SwapEvent.objects.bulk_create(swaps_list)
                         swaps_list = []
@@ -205,6 +203,12 @@ class UniConnector:
                 else:
                     raise Exception(f"Unkown infura respons for params:\n{data}\n Response was \n{r.status_code, r.text}\n")
 
+            except ConnectionError as ex:
+                print("body: ", r.request.body)
+                print("url: ", r.request.url)
+                print("headers: ", r.request.headers)
+                raise ex
+            
 
 
     def test_token(self):

@@ -9,7 +9,7 @@ import time
 
 
 class Command(BaseCommand):
-    help = 'used for testing stuff'
+    help = 'Used to populate tables with swap event data'
 
     def add_arguments(self, parser):
         # parser.add_argument('poll_ids', nargs='+', type=int)
@@ -44,48 +44,16 @@ class Command(BaseCommand):
                 for token0, token1, fee, address in con.get_pool_addresses():
                     PoolAddresses.objects.create(network=Networks.objects.get(short=network), token0=ERC20.objects.get(symbol=token0), token1=ERC20.objects.get(symbol=token1), fee_tier=fee.value, address=address)
 
+        if not SwapEvent.objects.all().exists():
+            for i, network in enumerate(networks):
+                print(f"Parsing swap events for network {network.short} - {i+1} of {len(networks)}")
+                pool_addresses = PoolAddresses.objects.filter(network=network)
+                for i, pool in enumerate(pool_addresses):
 
-        # Fetch swap events
+                    print(f"Parsing swap events for pool address id {pool.pk} - {i+1} of {len(pool_addresses)}")
+                    start = time.time()
+                    con = UniConnector(network.short)
+                    con.get_swap_events(pool)
+                    print(f'Took {time.time()-start}')
+
         
-
-        # event = AttributeDict({'sender': '0xB23DC3F00856288Cd7B6Bde5D06159f01b75aA4C', 'recipient': '0xB23DC3F00856288Cd7B6Bde5D06159f01b75aA4C', 'amount0': -328965041083921299668992, 'amount1': 329005257730, 'sqrtPriceX96': 79229047158522641211193, 'liquidity': 3580576773542804936844240, 'tick': -276324})
-        # SwapEvent.objects.create(**event)
-        # if not SwapEvent.objects.all().exists():
-        #     for network in networks:
-        #         for pool in PoolAddresses.objects.filter(network=network):
-        #             con = UniConnector(network.short)
-        #             for event in con.get_swap_events(pool):
-        #                 print(event.args)
-        #                 SwapEvent.objects.create(**event.args)
-
-        # else: 
-        #     print(f'SwapEvents count: {len(SwapEvent.objects.all())}')
-
-        # SwapEvent.objects.all().delete()
-        # if not SwapEvent.objects.all().exists():
-        for i, network in enumerate(networks):
-            if i == 2:
-                if network.short == 'OPTI':
-                    
-                    print(f"Parsing swap events for network {network.short} - {i+1} of {len(networks)}")
-                    pool_addresses = PoolAddresses.objects.filter(network=network)
-                    for i, pool in enumerate(pool_addresses):
-                    #     # if i == 17:
-                    #     #     print(SwapEvent.objects.filter(pool_address= pool).count())
-                    #     #     transactions = SwapEvent.objects.filter(pool_address= pool).values('transaction_meta')
-                    #     #     SwapEvent.objects.filter(pool_address= pool).delete()
-                    #     #     for transaction in transactions:
-                    #     #         TransactionMeta.objects.get(pk=transaction['transaction_meta']).delete()
-                    #     #     print(SwapEvent.objects.filter(pool_address= pool).count())    
-                    #     #     break
-                    #     # if i >= 17:
-                    #         # print(SwapEvent.objects.filter(pool_address= pool).count())
-                    #         # break
-
-                        print(f"Parsing swap events for pool address id {pool.pk} - {i+1} of {len(pool_addresses)}")
-                        start = time.time()
-                        con = UniConnector(network.short)
-                        con.get_swap_events(pool)
-                        print(f'Took {time.time()-start}')
-
-        # print(SwapEvent.objects.all().count())

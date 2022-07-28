@@ -23,7 +23,7 @@ class Command(BaseCommand):
         """ split blocknumbers into a range space evenly over 1000 entries
         """
        
-        for network in [Networks.objects.get(pk=4)]:
+        for network in Networks.objects.all():
             blocks = None
             if network.short == 'MAIN':
                 blocks = MainBlocks
@@ -33,10 +33,17 @@ class Command(BaseCommand):
                 blocks = ArbiBlocks
             if network.short == 'OPTI':
                 blocks = OptiBlocks
-            
+
+            temp = 0
             if blocks:
+                print(network.short, blocks.ALL.value[1]-blocks.ALL.value[0])
+                temp += blocks.ALL.value[1]-blocks.ALL.value[0]
+
+            print('ALL', temp)
+            if blocks == OptiBlocks:
                 linspace = np.linspace(blocks.ALL.value[0], blocks.ALL.value[1], 1000).astype(int)
                 objs = []
+                # print(blocks.ALL.value[0]
                 for blockNumber in linspace:
                     url = secrets[f'{network.short}_URL']
                     headers = {"Content-Type": "application/json"}
@@ -44,7 +51,7 @@ class Command(BaseCommand):
 
                     for i in range(3):
                         r = requests.post(url=url, headers=headers, data=json.dumps(data))
-                        print(json.dumps(data))
+                        # print(json.dumps(data))
                         response = json.loads(r.text)
                         try:
                             timestamp = response['result']['timestamp']
@@ -60,4 +67,5 @@ class Command(BaseCommand):
                 
                 BlockTimes.objects.bulk_create(objs)
             else:
-                raise Exception("Typo")
+                print('Not doing it')
+                # raise Exception("Typo")

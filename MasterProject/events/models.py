@@ -48,7 +48,9 @@ class PoolAddresses(models.Model):
 
     class Meta:
         unique_together = ["token0", "token1", "fee_tier", "network"]
-
+        indexes = [
+            models.Index(fields=['network','token0','token1', 'address'])
+        ]
         
 class TransactionMeta(models.Model):
     address = models.CharField(max_length=256)
@@ -61,6 +63,10 @@ class TransactionMeta(models.Model):
     transactionHash = models.CharField(max_length=256)
     transactionIndex = models.CharField(max_length=256)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['blockNumber']),
+        ]
 
 
 class SwapEvent(models.Model):
@@ -76,7 +82,9 @@ class SwapEvent(models.Model):
     tick = models.DecimalField(max_digits=77, decimal_places=0)
 
     class Meta:
-        pass
+        indexes = [
+            models.Index(fields=['transaction_meta']),
+        ]
 
 class BlockTimes(models.Model):
     network = models.ForeignKey(Networks, on_delete=models.PROTECT)
@@ -84,3 +92,9 @@ class BlockTimes(models.Model):
     blockHash = models.CharField(max_length=256)
     timestamp = models.DecimalField(max_digits=77, decimal_places=0)
     datetime = models.DateTimeField()
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['blockNumber']),
+            models.Index(fields=['timestamp']),
+        ]
